@@ -1,0 +1,13 @@
+{
+  "name": "gadgetku",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GadgetKu — Etalase digital gadget & aksesori elektronik dengan pemesanan via WhatsApp",
+  "scripts": {
+    "dev": "npm --prefix server run dev",
+    "start": "npm --prefix server run start",
+    "db:init": "npm --prefix server run db:init",
+    "setup": "npm --prefix server install && npm --prefix server run db:init",
+    "postinstall": "npm --prefix server install"
+  }
+}

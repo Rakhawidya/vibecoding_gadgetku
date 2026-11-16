@@ -90,6 +90,7 @@ Nilai tersebut hanya dipakai saat seed. Ubah password setelah login lewat menu P
 |---|:---:|:---:|:---:|
 | Lihat katalog, cari, filter, sorting | ✅ | ✅ | ✅ |
 | Daftar akun pembeli / login | ✅ | ✅ | ✅ |
+| Masuk cepat sebagai pembeli (tanpa email/password) | ✅ | ✅ | ✅ |
 | Pesan produk via WhatsApp | ✅* | ✅* | ✅ |
 | Lihat riwayat pesanan **sendiri** | ✅ | ✅ | ✅ |
 | Lihat pesanan untuk **produk miliknya** | ✅ (semua) | ✅ | ❌ |
@@ -140,6 +141,7 @@ GadgetKu/
 |---|---|---|
 | POST | `/api/auth/register` | Publik (menjadi pembeli) |
 | POST | `/api/auth/login` | Publik |
+| POST | `/api/auth/guest` | Publik (sesi pembeli tamu per perangkat, body `device_id`) |
 | GET/PUT | `/api/auth/me` | Semua yang login |
 | POST | `/api/uploads` | admin, seller (upload gambar produk) |
 | GET | `/api/products` | Publik |

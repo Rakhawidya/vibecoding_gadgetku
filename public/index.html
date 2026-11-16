@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f8fafc" />
+  <title>GadgetKu — Etalase Digital Gadget & Aksesori Elektronik</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-shell">
+      <a href="#/katalog" class="brand" aria-label="GadgetKu — kembali ke etalase">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="2.5" width="12" height="19" rx="3" />
+            <line x1="10" y1="18.5" x2="14" y2="18.5" />
+            <path d="M9 8.5h6" />
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong id="brand-name">GadgetKu</strong>
+          <small>Tech Store</small>
+        </span>
+      </a>
+
+      <nav id="nav" class="nav" aria-label="Navigasi utama"></nav>
+
+      <div class="header-actions">
+        <span id="role-pill" class="role-pill" hidden></span>
+        <a id="dashboard-link" class="btn btn-primary btn-sm header-dash" href="#/dashboard" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9" rx="1.6" /><rect x="14" y="3" width="7" height="5" rx="1.6" />
+            <rect x="14" y="12" width="7" height="9" rx="1.6" /><rect x="3" y="16" width="7" height="5" rx="1.6" />
+          </svg>
+          Dashboard
+        </a>
+        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Ganti tema terang atau gelap" title="Ganti tema" aria-pressed="false">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" class="container"></main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© 2026 <strong id="footer-store">GadgetKu</strong> — Etalase Digital Gadget &amp; Aksesori Elektronik</span>
+      <span class="footer-note">Dibuat untuk pengalaman belanja yang cepat &amp; sederhana.</span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="modal-root"></div>
+  <script src="app.js"></script>
+</body>
+</html>

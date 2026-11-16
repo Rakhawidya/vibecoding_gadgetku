@@ -1,0 +1,21 @@
+{
+  "name": "gadgetku-server",
+  "version": "1.0.0",
+  "description": "GadgetKu API - Node.js + Express + MySQL",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/init-db.js --if-empty && node src/index.js",
+    "dev": "node src/init-db.js --if-empty && node --watch-path=src src/index.js",
+    "db:init": "node src/init-db.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.5.0",
+    "mysql2": "^3.11.0"
+  }
+}
