@@ -1,0 +1,11 @@
+node_modules
+server/node_modules
+.git
+.env
+server/.env
+public/uploads/*
+!public/uploads/.gitkeep
+prototipe_aplikasi_web_gadgetku (2).html
+spesifikasi_teknis_gadgetku.md
+*.db
+*.db-journal

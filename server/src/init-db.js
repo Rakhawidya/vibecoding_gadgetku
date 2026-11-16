@@ -10,9 +10,10 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const { sqliteFile, dbClient } = require('./db-path');
 
 const IF_EMPTY = process.argv.includes('--if-empty');
-const CLIENT = String(process.env.DB_CLIENT || 'mysql').toLowerCase();
+const CLIENT = dbClient();
 
 const SEED_PRODUCTS = [
   ['Ponsel Pintar 6.5 Inci', 'Ponsel', 2450000, 12, 'Ponsel generik layar 6.5 inci, baterai 5000 mAh, kamera 50 MP.', 'svg:ponsel', 1],
@@ -59,11 +60,9 @@ function getSeedUsers() {
   return users;
 }
 
-async function initSqlite() {
+async function initSqlite(ifEmpty = IF_EMPTY) {
   const { DatabaseSync } = require('node:sqlite');
-  const dbFile = process.env.SQLITE_FILE
-    ? path.resolve(__dirname, '..', process.env.SQLITE_FILE)
-    : path.join(__dirname, '..', 'db', 'gadgetku.dev.db');
+  const dbFile = sqliteFile();
 
   const db = new DatabaseSync(dbFile);
   db.exec('PRAGMA foreign_keys = ON');
@@ -71,7 +70,7 @@ async function initSqlite() {
 
   const products = db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
   const users = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
-  if (IF_EMPTY && products > 0 && users > 0) {
+  if (ifEmpty && products > 0 && users > 0) {
     console.log(`Database SQLite sudah berisi data (${products} produk). Seed dilewati.`);
     db.close();
     return;
@@ -109,7 +108,7 @@ async function initSqlite() {
   console.log(`Seed: ${seedUsers.length} pengguna, ${SEED_PRODUCTS.length} produk.`);
 }
 
-async function initMysql() {
+async function initMysql(ifEmpty = IF_EMPTY) {
   const mysql = require('mysql2/promise');
   const dbName = process.env.DB_NAME || 'gadgetku';
 
@@ -131,7 +130,7 @@ async function initMysql() {
 
   const [[{ n: products }]] = await conn.query('SELECT COUNT(*) AS n FROM products');
   const [[{ n: users }]] = await conn.query('SELECT COUNT(*) AS n FROM users');
-  if (IF_EMPTY && products > 0 && users > 0) {
+  if (ifEmpty && products > 0 && users > 0) {
     console.log(`Database MySQL sudah berisi data (${products} produk). Seed dilewati.`);
     await conn.end();
     return;
@@ -170,13 +169,21 @@ async function initMysql() {
   console.log('Selesai. Database MySQL siap digunakan.');
 }
 
-(async () => {
-  if (CLIENT === 'sqlite') await initSqlite();
-  else await initMysql();
-})().catch((e) => {
-  console.error('Gagal inisialisasi database:', e.message);
-  if (CLIENT === 'mysql' && /Access denied/i.test(e.message)) {
-    console.error('Periksa DB_USER/DB_PASSWORD di server/.env, atau jalankan mode dev tanpa MySQL dengan DB_CLIENT=sqlite.');
-  }
-  process.exit(1);
-});
+async function initDatabase({ ifEmpty = IF_EMPTY, client = CLIENT } = {}) {
+  if (client === 'sqlite') return initSqlite(ifEmpty);
+  return initMysql(ifEmpty);
+}
+
+module.exports = { initDatabase, SEED_PRODUCTS, SEED_SETTINGS };
+
+if (require.main === module) {
+  initDatabase()
+    .then(() => {})
+    .catch((e) => {
+      console.error('Gagal inisialisasi database:', e.message);
+      if (CLIENT === 'mysql' && /Access denied/i.test(e.message)) {
+        console.error('Periksa DB_USER/DB_PASSWORD di server/.env, atau jalankan mode dev tanpa MySQL dengan DB_CLIENT=sqlite.');
+      }
+      process.exit(1);
+    });
+}

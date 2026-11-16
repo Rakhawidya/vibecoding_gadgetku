@@ -1,7 +1,7 @@
 require('dotenv').config();
-const path = require('path');
+const { sqliteFile, dbClient } = require('./db-path');
 
-const client = String(process.env.DB_CLIENT || 'mysql').toLowerCase();
+const client = dbClient();
 
 /**
  * Mode pengembangan tanpa setup: DB_CLIENT=sqlite memakai database file lokal
@@ -9,9 +9,7 @@ const client = String(process.env.DB_CLIENT || 'mysql').toLowerCase();
  */
 if (client === 'sqlite') {
   const { DatabaseSync } = require('node:sqlite');
-  const dbFile = process.env.SQLITE_FILE
-    ? path.resolve(__dirname, '..', process.env.SQLITE_FILE)
-    : path.join(__dirname, '..', 'db', 'gadgetku.dev.db');
+  const dbFile = sqliteFile();
 
   const db = new DatabaseSync(dbFile);
   db.exec('PRAGMA foreign_keys = ON');
