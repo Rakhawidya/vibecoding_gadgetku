@@ -169,8 +169,67 @@ async function initMysql(ifEmpty = IF_EMPTY) {
   console.log('Selesai. Database MySQL siap digunakan.');
 }
 
+async function initPostgres(ifEmpty = IF_EMPTY) {
+  const { Client } = require('pg');
+
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+  if (!connectionString) throw new Error('DATABASE_URL wajib diisi untuk DB_CLIENT=postgres.');
+  const isLocal = /localhost|127\.0\.0\.1/.test(connectionString);
+
+  const client = new Client({
+    connectionString,
+    ssl: isLocal || process.env.PGSSLMODE === 'disable' ? undefined : { rejectUnauthorized: false },
+  });
+  await client.connect();
+  try {
+    console.log('Menjalankan schema.postgres.sql ...');
+    await client.query(fs.readFileSync(path.join(__dirname, '..', 'db', 'schema.postgres.sql'), 'utf8'));
+
+    const products = Number((await client.query('SELECT COUNT(*)::int AS n FROM products')).rows[0].n);
+    const users = Number((await client.query('SELECT COUNT(*)::int AS n FROM users')).rows[0].n);
+    if (ifEmpty && products > 0 && users > 0) {
+      console.log(`Database PostgreSQL sudah berisi data (${products} produk). Seed dilewati.`);
+      return;
+    }
+
+    const seedUsers = getSeedUsers();
+    const hash = await getSeedHash();
+    console.log('Mengisi akun contoh ...');
+    for (const u of seedUsers) {
+      await client.query(
+        `INSERT INTO users (nama, email, password_hash, role, wa_number) VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (email) DO UPDATE SET
+           nama = EXCLUDED.nama,
+           password_hash = EXCLUDED.password_hash,
+           role = EXCLUDED.role,
+           wa_number = EXCLUDED.wa_number`,
+        [u.nama, u.email, hash, u.role, u.wa]
+      );
+    }
+    const sellerEmail = seedUsers.find((u) => u.role === 'seller').email;
+    const sellerId = (await client.query('SELECT id FROM users WHERE email = $1', [sellerEmail])).rows[0].id;
+
+    for (const [key, value] of SEED_SETTINGS) {
+      await client.query('INSERT INTO settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING', [key, value]);
+    }
+
+    console.log('Mengisi produk contoh ...');
+    await client.query('DELETE FROM products');
+    for (const p of SEED_PRODUCTS) {
+      await client.query(
+        'INSERT INTO products (seller_id, nama, kategori, harga, stok, deskripsi, image_url, unggulan) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [sellerId, ...p]
+      );
+    }
+    console.log('Selesai. Database PostgreSQL siap digunakan.');
+  } finally {
+    await client.end();
+  }
+}
+
 async function initDatabase({ ifEmpty = IF_EMPTY, client = CLIENT } = {}) {
   if (client === 'sqlite') return initSqlite(ifEmpty);
+  if (client === 'postgres') return initPostgres(ifEmpty);
   return initMysql(ifEmpty);
 }
 

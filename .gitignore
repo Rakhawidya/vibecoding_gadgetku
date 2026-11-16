@@ -8,3 +8,6 @@ server/db/*.db-wal
 server/db/*.db-shm
 public/uploads/*
 !public/uploads/.gitkeep
+
+.vercel
+.env*

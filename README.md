@@ -101,6 +101,23 @@ Environment variable yang perlu diisi di dashboard Vercel (Production):
 | `SEED_SELLER_EMAIL` | `seller@gadgetku.id` |
 | `SEED_PEMBELI_EMAIL` | `pembeli@gadgetku.id` |
 
+### Database produksi di Vercel: Vercel Postgres
+
+Untuk data yang permanen, gunakan **Vercel Postgres (Neon)**:
+
+1. Buka project di dashboard Vercel → tab **Storage** → **Create Database** → pilih **Neon (Postgres)**.
+2. Hubungkan ke project & environment **Production** — Vercel otomatis mengisi `DATABASE_URL`.
+3. Set environment variable `DB_CLIENT=postgres`.
+4. Redeploy. Schema + data contoh otomatis dibuat saat cold start pertama.
+
+Bandingkan ketiga mode database:
+
+| Mode | `DB_CLIENT` | Butuh | Sifat data |
+| --- | --- | --- | --- |
+| Demo | `sqlite` (default di Vercel) | — | `/tmp/gadgetku.db`, reset saat cold start |
+| Produksi | `postgres` | `DATABASE_URL` (Vercel Postgres/Neon) | permanen |
+| Mandiri | `mysql` | MySQL server + `DB_*` | permanen |
+
 Catatan penting untuk Vercel:
 
 - Tanpa `DB_CLIENT=mysql`, aplikasi otomatis memakai SQLite di `/tmp/gadgetku.db`

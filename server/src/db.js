@@ -28,6 +28,48 @@ if (client === 'sqlite') {
   }
 
   module.exports = { query, pool: null, db, client, dbFile };
+} else if (client === 'postgres') {
+  /**
+   * Mode Vercel Postgres / Neon: DB_CLIENT=postgres dengan DATABASE_URL.
+   * meniru antarmuka mysql2 (parameter bernama `:nama`).
+   */
+  const { Pool } = require('pg');
+
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+  const isLocal = /localhost|127\.0\.0\.1/.test(connectionString);
+  const pool = new Pool({
+    connectionString,
+    ssl: isLocal || process.env.PGSSLMODE === 'disable' ? undefined : { rejectUnauthorized: false },
+    max: 5,
+  });
+
+  /** Konversi `:nama` menjadi `$1, $2, ...` sesuai urutan kemunculan. */
+  function toPgSql(sql, params) {
+    const keys = [];
+    const text = sql.replace(/:(\w+)/g, (match, name, offset) => {
+      if (offset > 0 && sql[offset - 1] === ':') return match; // lewati cast `::`
+      if (!(name in params)) return match;
+      if (!keys.includes(name)) keys.push(name);
+      return '$' + (keys.indexOf(name) + 1);
+    });
+    return { text, values: keys.map((k) => params[k]) };
+  }
+
+  async function query(sql, params = {}) {
+    const { text, values } = toPgSql(sql, params);
+    const cmd = sql.trim().slice(0, 6).toUpperCase();
+    const finalText = cmd === 'INSERT' ? `${text} RETURNING id` : text;
+    const result = await pool.query(finalText, values);
+    if (cmd === 'INSERT') {
+      return { insertId: result.rows[0] ? Number(result.rows[0].id) : null, affectedRows: result.rowCount };
+    }
+    if (cmd === 'UPDATE' || cmd === 'DELETE') {
+      return { insertId: null, affectedRows: result.rowCount };
+    }
+    return result.rows;
+  }
+
+  module.exports = { query, pool, client };
 } else {
   const mysql = require('mysql2/promise');
 
