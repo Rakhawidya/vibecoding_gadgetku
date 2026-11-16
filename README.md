@@ -82,6 +82,36 @@ Nilai tersebut hanya dipakai saat seed. Ubah password setelah login lewat menu P
    npm run dev
    ```
 
+### Deploy ke Vercel
+
+Konfigurasi serverless sudah tersedia: `api/index.js`, `vercel.json`, dan `.vercelignore`.
+
+```bash
+npx vercel login
+npx vercel --prod
+```
+
+Environment variable yang perlu diisi di dashboard Vercel (Production):
+
+| Key | Nilai |
+| --- | --- |
+| `JWT_SECRET` | string acak panjang |
+| `SEED_PASSWORD` | password akun contoh (min. 6 karakter) |
+| `SEED_ADMIN_EMAIL` | `admin@gadgetku.id` |
+| `SEED_SELLER_EMAIL` | `seller@gadgetku.id` |
+| `SEED_PEMBELI_EMAIL` | `pembeli@gadgetku.id` |
+
+Catatan penting untuk Vercel:
+
+- Tanpa `DB_CLIENT=mysql`, aplikasi otomatis memakai SQLite di `/tmp/gadgetku.db`
+  yang di-seed saat cold start. **Data bersifat sementara**: perubahan (produk, pesanan,
+  akun tamu) bisa hilang dan kembali ke data contoh saat instance baru dijalankan.
+- Upload gambar disimpan di `/tmp/uploads`, ikut terhapus saat instance didaur ulang.
+  Untuk produksi nyata gunakan MySQL hosted (`DB_CLIENT=mysql` + `DB_HOST`, `DB_PORT`,
+  `DB_USER`, `DB_PASSWORD`, `DB_NAME`) dan object storage untuk gambar.
+- Frontend & API berada pada satu deployment; seluruh request dilayani Express
+  melalui function `api/index.js`.
+
 ---
 
 ## 🔐 Hak Akses per Role
