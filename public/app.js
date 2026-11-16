@@ -312,6 +312,20 @@ function setActiveNav() {
     if (active) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  scrollActiveNav();
+}
+
+function scrollActiveNav() {
+  const nav = document.getElementById('nav');
+  if (!nav || nav.scrollWidth <= nav.clientWidth + 4) return;
+  const active = nav.querySelector('a.active');
+  if (!active) return;
+  requestAnimationFrame(() => {
+    nav.scrollTo({
+      left: active.offsetLeft - nav.clientWidth / 2 + active.offsetWidth / 2,
+      behavior: 'smooth',
+    });
+  });
 }
 
 const themeBtn = document.getElementById('theme-toggle');
@@ -332,7 +346,11 @@ const katalogState = { search: '', kategori: '', sort: 'unggulan', products: [],
 function productCardHtml(p) {
   const stok = Number(p.stok);
   const level = stok === 0 ? 'is-out' : stok <= 5 ? 'is-low' : '';
-  const stockText = stok === 0 ? 'Stok habis' : `Stok ${stok} unit${stok <= 5 ? ' · menipis' : ''}`;
+  const stockText = stok === 0
+    ? 'Stok habis'
+    : stok <= 5
+      ? `Stok menipis · ${stok} unit`
+      : `Stok aman · ${stok} unit`;
   return `
     <article class="product-card" data-detail="${p.id}" tabindex="0" role="button" aria-label="Lihat detail ${esc(p.nama)}">
       <div class="product-media">
@@ -348,11 +366,11 @@ function productCardHtml(p) {
         <p class="product-desc">${esc(p.deskripsi || 'Tanpa deskripsi.')}</p>
         <div class="product-price">${rupiah(p.harga)}</div>
         <div class="product-stock ${level}">
-          <span class="dot"></span>${stockText}
-          <span class="seller" title="${esc(p.seller_nama || '')}">${esc(p.seller_nama || '')}</span>
+          <span class="dot" aria-hidden="true"></span>${stockText}
+          <span class="seller" title="Dijual oleh ${esc(p.seller_nama || 'toko')}">${esc(p.seller_nama || '')}</span>
         </div>
-        <button type="button" class="btn btn-wa" data-pesan="${p.id}" ${stok === 0 ? 'disabled' : ''}>
-          ${I.wa} ${stok === 0 ? 'Stok Habis' : 'Pesan via WhatsApp'}
+        <button type="button" class="btn btn-wa" data-pesan="${p.id}" aria-label="${stok === 0 ? 'Stok habis' : `Pesan ${p.nama} via WhatsApp`}" ${stok === 0 ? 'disabled' : ''}>
+          ${I.wa} <span>${stok === 0 ? 'Stok Habis' : 'Pesan via WhatsApp'}</span>
         </button>
       </div>
     </article>`;
@@ -397,7 +415,6 @@ async function viewKatalog() {
   katalogState.all = all;
 
   const totalStok = all.reduce((sum, p) => sum + Number(p.stok || 0), 0);
-  const jumlahKategori = new Set(all.map((p) => p.kategori)).size;
   const unggulan = all.filter((p) => p.unggulan).slice(0, 3);
   const ready = all.filter((p) => Number(p.stok) > 0).length;
   const readyPct = all.length ? Math.round((ready / all.length) * 100) : 0;
@@ -413,10 +430,10 @@ async function viewKatalog() {
           <button type="button" class="btn btn-primary" id="hero-explore">${I.box} Jelajahi Koleksi</button>
           <button type="button" class="btn btn-outline" id="hero-chat">${I.chat} Chat Admin</button>
         </div>
-        <div class="hero-stats">
-          <div class="hero-stat"><strong>${all.length}</strong><span>Produk aktif</span></div>
-          <div class="hero-stat"><strong>${totalStok}</strong><span>Unit siap kirim</span></div>
-          <div class="hero-stat"><strong>${jumlahKategori}</strong><span>Kategori pilihan</span></div>
+        <div class="hero-trust" aria-label="Keunggulan berbelanja">
+          <span class="hero-trust-item">${I.check} Siap kirim hari ini</span>
+          <span class="hero-trust-item">${I.wa} Pesan langsung via WhatsApp</span>
+          <span class="hero-trust-item">${I.tag} Tanpa keranjang &amp; tanpa akun</span>
         </div>
       </div>
       <aside class="hero-panel" aria-label="Ringkasan stok toko">
@@ -1498,10 +1515,11 @@ async function viewKelolaUser() {
         <div class="field"><label for="u-pass">Password</label><input id="u-pass" type="password" placeholder="min. 6 karakter" autocomplete="new-password" /></div>
         <div class="field"><label for="u-role">Role (Hak Akses)</label>
           <select id="u-role">
-            <option value="pembeli">Pembeli — belanja & pesan via WhatsApp</option>
-            <option value="seller">Seller — kelola produk & pesanan toko sendiri</option>
-            <option value="admin">Admin — akses penuh sistem</option>
+            <option value="pembeli">Pembeli</option>
+            <option value="seller">Seller</option>
+            <option value="admin">Admin</option>
           </select>
+          <small class="input-help">Pembeli: belanja &amp; pesan via WA · Seller: kelola produk sendiri · Admin: akses penuh.</small>
         </div>
         <button id="u-simpan" class="btn btn-primary btn-block">Buat Akun</button>
       </div>
@@ -1518,13 +1536,13 @@ async function viewKelolaUser() {
       <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Daftar</th><th>Aksi</th></tr></thead>
       <tbody>${rows.map((u) => `
         <tr>
-          <td><strong>${esc(u.nama)}</strong>${u.id === user.id ? ' <span class="chip">Anda</span>' : ''}</td>
-          <td>${esc(u.email)}</td>
-          <td><select class="role-select" data-role="${u.id}" ${u.id === user.id ? 'disabled' : ''} aria-label="Role ${esc(u.nama)}">
+          <td class="cell-main" data-label="Nama"><strong>${esc(u.nama)}</strong>${u.id === user.id ? ' <span class="chip">Anda</span>' : ''}</td>
+          <td data-label="Email">${esc(u.email)}</td>
+          <td data-label="Role"><select class="role-select" data-role="${u.id}" ${u.id === user.id ? 'disabled' : ''} aria-label="Role ${esc(u.nama)}">
             ${['admin', 'seller', 'pembeli'].map((r) => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('')}
           </select></td>
-          <td>${new Date(u.created_at).toLocaleDateString('id-ID')}</td>
-          <td>${u.id === user.id ? '<span class="text-muted">—</span>' : `<button type="button" class="btn btn-danger btn-sm" data-hapus="${u.id}">${I.trash} Hapus</button>`}</td>
+          <td data-label="Terdaftar">${new Date(u.created_at).toLocaleDateString('id-ID')}</td>
+          <td data-label="Aksi">${u.id === user.id ? '<span class="text-muted">—</span>' : `<button type="button" class="btn btn-danger btn-sm" data-hapus="${u.id}">${I.trash} Hapus</button>`}</td>
         </tr>`).join('')}</tbody>`;
 
     document.querySelectorAll('[data-role]').forEach((s) => s.onchange = async () => {
@@ -1592,16 +1610,16 @@ async function viewPesanan() {
           <tbody>
             ${rows.map((o) => `
             <tr>
-              <td class="num">${o.id}</td>
-              <td>${user.role === 'pembeli' ? esc(o.product_nama) : `<strong>${esc(o.pembeli_nama)}</strong><br><small>${esc(o.product_nama)}</small>`}</td>
-              <td class="num">${o.qty}</td>
-              <td class="num">${rupiah(o.total)}</td>
-              <td><span class="badge badge-${o.status}">${o.status}</span></td>
-              <td>${new Date(o.created_at).toLocaleString('id-ID')}</td>
-              ${bolehUbahStatus ? `<td><select data-status="${o.id}" aria-label="Status pesanan ${o.id}">
+              <td class="num" data-label="ID">#${o.id}</td>
+              <td class="cell-main" data-label="${user.role === 'pembeli' ? 'Produk' : 'Pembeli'}">${user.role === 'pembeli' ? esc(o.product_nama) : `<strong>${esc(o.pembeli_nama)}</strong><br><small>${esc(o.product_nama)}</small>`}</td>
+              <td class="num" data-label="Qty">${o.qty}</td>
+              <td class="num" data-label="Total">${rupiah(o.total)}</td>
+              <td data-label="Status"><span class="badge badge-${o.status}">${o.status}</span></td>
+              <td data-label="Tanggal">${new Date(o.created_at).toLocaleString('id-ID')}</td>
+              ${bolehUbahStatus ? `<td data-label="Aksi"><select data-status="${o.id}" aria-label="Status pesanan ${o.id}">
                 ${STATUS.map((s) => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
               </select></td>` : ''}
-            </tr>`).join('') || `<tr><td colspan="7"><div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan baru akan muncul di sini.</div></td></tr>`}
+            </tr>`).join('') || `<tr class="tr-empty"><td colspan="7"><div class="empty-state"><strong>Belum ada pesanan</strong>Pesanan baru akan muncul di sini.</div></td></tr>`}
           </tbody>
         </table>
       </div>
